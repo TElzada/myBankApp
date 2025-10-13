@@ -53,9 +53,57 @@ class MainActivity : AppCompatActivity() ,  AccountContracts.View{
         presenter.loadAccounts()
     }
     private fun initAdapter()= with(binding){
-        adapter = AccountsAdapter()
+        adapter = AccountsAdapter(
+            onEdit = {
+                showEditDialog(it)
+            },
+            onSwitchToggle = { id,isChecked ->
+                presenter.updateAccountPartially(id,isChecked)
+            },
+            onDelete = {
+                showDeleteDialog(it)
+            }
+        )
         recyclerView.layoutManager= LinearLayoutManager(this@MainActivity)
         recyclerView.adapter = adapter
+    }
+    private fun showDeleteDialog(id: String){
+        AlertDialog.Builder(this)
+            .setTitle("Вы уверены?")
+            .setMessage("Удалить счёт с идентификатором- $id?")
+            .setPositiveButton("Удалить"){ _,_ ->
+                presenter.deleteAccount(id)
+            }
+            .setNegativeButton("Отмена"){_,_ ->
+
+            }.show()
+
+    }
+
+    private fun showEditDialog(account: Account) {
+        val binding = DialogAddBinding.inflate(LayoutInflater.from(this))
+        with(binding){
+
+            account.run{
+
+                etName.setText(name)
+                etBalance.setText(balance.toString())
+                etCurrency.setText(currency)
+
+                AlertDialog.Builder(this@MainActivity)
+                    .setTitle("Изменение счёта")
+                    .setView(binding.root)
+                    .setPositiveButton("Изменить"){_,_->
+                        val updatedAccount = account.copy(
+                            name = etName.text.toString(),
+                            balance = etBalance.text.toString().toInt(),
+                            currency = etCurrency.text.toString()
+                        )
+                        presenter.updateAccountFully(updatedAccount)
+                    }
+                    .show()
+            }
+        }
     }
 
     override fun showAccounts(accountList:List<Account>) {

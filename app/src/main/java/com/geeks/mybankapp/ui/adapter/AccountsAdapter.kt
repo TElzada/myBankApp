@@ -7,7 +7,11 @@ import com.geeks.mybankapp.data.model.Account
 import com.geeks.mybankapp.databinding.ItemAccountBinding
 import kotlin.text.clear
 
-class AccountsAdapter: RecyclerView.Adapter<AccountsAdapter.AccountViewHolder>() {
+class AccountsAdapter(
+    val onEdit:(Account) -> Unit,
+    val onSwitchToggle :(String, Boolean)->Unit,
+    val onDelete : (String)-> Unit
+): RecyclerView.Adapter<AccountsAdapter.AccountViewHolder>() {
     private val items = arrayListOf<Account>()
     fun submitList(data: List<Account>){
         items.clear()
@@ -35,8 +39,23 @@ class AccountsAdapter: RecyclerView.Adapter<AccountsAdapter.AccountViewHolder>()
             tvName.text = account.name
             val text = "${account.balance} ${account.currency}"
             tvBalance.text = text
+            btnEdit.setOnClickListener {
+                onEdit(account)
+            }
+            btnDelete.setOnClickListener {
+                account.id?.let{
+                    onDelete(it)
+                }
+            }
+            switcher.isChecked= account.isActive == true
+            switcher.setOnCheckedChangeListener { buttonView,isChecked->
+                account.id?.let{
+                    onSwitchToggle(it ,isChecked)
+                }
 
+            }
         }
+
     }
 
 }
