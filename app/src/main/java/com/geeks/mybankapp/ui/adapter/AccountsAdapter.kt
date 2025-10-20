@@ -5,7 +5,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.geeks.mybankapp.data.model.Account
 import com.geeks.mybankapp.databinding.ItemAccountBinding
-import kotlin.text.clear
 
 class AccountsAdapter(
     val onEdit:(Account) -> Unit,
@@ -23,7 +22,8 @@ class AccountsAdapter(
         parent: ViewGroup,
         viewType: Int
     ): AccountsAdapter.AccountViewHolder {
-        val binding = ItemAccountBinding.inflate(LayoutInflater.from(parent.context),parent,false)
+        val binding = ItemAccountBinding.inflate(LayoutInflater.from(
+            parent.context),parent,false)
         return AccountViewHolder(binding)
     }
 
@@ -34,7 +34,8 @@ class AccountsAdapter(
     override fun getItemCount(): Int {
         return items.size
     }
-    inner class AccountViewHolder(private val binding: ItemAccountBinding): RecyclerView.ViewHolder(binding.root){
+    inner class AccountViewHolder(private val binding: ItemAccountBinding): RecyclerView.ViewHolder(
+        binding.root){
         fun bind(account: Account) = with(binding){
             tvName.text = account.name
             val text = "${account.balance} ${account.currency}"

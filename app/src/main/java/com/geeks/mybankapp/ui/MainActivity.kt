@@ -2,29 +2,35 @@ package com.geeks.mybankapp.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.geeks.mybankapp.data.model.Account
 import com.geeks.mybankapp.databinding.ActivityMainBinding
 import com.geeks.mybankapp.databinding.DialogAddBinding
-import com.geeks.mybankapp.domain.presenter.AccountContracts
-import com.geeks.mybankapp.domain.presenter.AccountPresenter
+import com.geeks.mybankapp.ui.viewModel.AccountViewModel
 import com.geeks.mybankapp.ui.adapter.AccountsAdapter
 
-class MainActivity : AppCompatActivity() ,  AccountContracts.View{
+class MainActivity : AppCompatActivity(){
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: AccountsAdapter
-    private lateinit var presenter: AccountPresenter
+    private val viewModel: AccountViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding= ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         initAdapter()
-        presenter = AccountPresenter( this)
+        subscribeToLiveData()
 
         binding.btnAdd.setOnClickListener {
             showAddDialog()
+        }
+    }
+
+    private fun subscribeToLiveData(){
+        viewModel.accounts.observe(this){
+            adapter.submitList(it)
         }
     }
 
@@ -40,7 +46,7 @@ class MainActivity : AppCompatActivity() ,  AccountContracts.View{
                         balance = etBalance.text.toString().toInt(),
                         currency = etCurrency.text.toString()
                     )
-                    presenter.addAccount(account)
+                    viewModel.addAccount(account)
 
                 }
                 .show()
@@ -50,7 +56,7 @@ class MainActivity : AppCompatActivity() ,  AccountContracts.View{
 
     override fun onResume() {
         super.onResume()
-        presenter.loadAccounts()
+        viewModel.loadAccounts()
     }
     private fun initAdapter()= with(binding){
         adapter = AccountsAdapter(
@@ -58,7 +64,7 @@ class MainActivity : AppCompatActivity() ,  AccountContracts.View{
                 showEditDialog(it)
             },
             onSwitchToggle = { id,isChecked ->
-                presenter.updateAccountPartially(id,isChecked)
+                viewModel.updateAccountPartially(id,isChecked)
             },
             onDelete = {
                 showDeleteDialog(it)
@@ -72,7 +78,7 @@ class MainActivity : AppCompatActivity() ,  AccountContracts.View{
             .setTitle("Вы уверены?")
             .setMessage("Удалить счёт с идентификатором- $id?")
             .setPositiveButton("Удалить"){ _,_ ->
-                presenter.deleteAccount(id)
+                viewModel.deleteAccount(id)
             }
             .setNegativeButton("Отмена"){_,_ ->
 
@@ -99,16 +105,14 @@ class MainActivity : AppCompatActivity() ,  AccountContracts.View{
                             balance = etBalance.text.toString().toInt(),
                             currency = etCurrency.text.toString()
                         )
-                        presenter.updateAccountFully(updatedAccount)
+                        viewModel.updateAccountFully(updatedAccount)
                     }
                     .show()
             }
         }
     }
 
-    override fun showAccounts(accountList:List<Account>) {
-        adapter.submitList(accountList)
-    }
+
 
 
 }
