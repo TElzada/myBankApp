@@ -1,5 +1,6 @@
 package com.geeks.mybankapp.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.Toast
@@ -10,12 +11,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.geeks.mybankapp.data.model.Account
 import com.geeks.mybankapp.databinding.ActivityMainBinding
 import com.geeks.mybankapp.databinding.DialogAddBinding
+import com.geeks.mybankapp.ui.account.AccountDetailsActivity
 import com.geeks.mybankapp.ui.adapter.AccountsAdapter
 import com.geeks.mybankapp.ui.viewModel.AccountViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: AccountsAdapter
     private val viewModel: AccountViewModel by viewModels()
@@ -24,21 +27,17 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         initAdapter()
         subscribeToLiveData()
 
-        binding.btnAdd.setOnClickListener {
-            showAddDialog()
-        }
+        binding.btnAdd.setOnClickListener { showAddDialog() }
     }
 
     private fun subscribeToLiveData() {
-        viewModel.accounts.observe(this) {
-            adapter.submitList(it)
-        }
-
-        viewModel.errorMessage.observe(this) { message ->
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        viewModel.accounts.observe(this) { adapter.submitList(it) }
+        viewModel.errorMessage.observe(this) {
+            Toast.makeText(this, it, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -51,7 +50,7 @@ class MainActivity : AppCompatActivity() {
                 .setPositiveButton("Добавить") { _, _ ->
                     val account = Account(
                         name = etName.text.toString(),
-                        balance = etBalance.text.toString().toInt(),
+                        balance = etBalance.text.toString().toIntOrNull() ?: 0,
                         currency = etCurrency.text.toString()
                     )
                     viewModel.addAccount(account)
@@ -69,7 +68,12 @@ class MainActivity : AppCompatActivity() {
         adapter = AccountsAdapter(
             onEdit = { showEditDialog(it) },
             onSwitchToggle = { id, isChecked -> viewModel.updateAccountPartially(id, isChecked) },
-            onDelete = { showDeleteDialog(it) }
+            onDelete = { showDeleteDialog(it) },
+            onItemClick = { id ->
+                val intent = Intent(this@MainActivity, AccountDetailsActivity::class.java)
+                intent.putExtra("account_id", id)
+                startActivity(intent)
+            }
         )
         recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
         recyclerView.adapter = adapter
@@ -98,7 +102,7 @@ class MainActivity : AppCompatActivity() {
                     .setPositiveButton("Изменить") { _, _ ->
                         val updatedAccount = account.copy(
                             name = etName.text.toString(),
-                            balance = etBalance.text.toString().toInt(),
+                            balance = etBalance.text.toString().toIntOrNull() ?: 0,
                             currency = etCurrency.text.toString()
                         )
                         viewModel.updateAccountFully(updatedAccount)
