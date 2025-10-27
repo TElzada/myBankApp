@@ -14,37 +14,45 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AccountViewModel @Inject constructor(private val accountsApi: AccountsApi): ViewModel() {
+
     private val _accounts = MutableLiveData<List<Account>>()
     val accounts: LiveData<List<Account>> = _accounts
+
+    private val _errorMessage = MutableLiveData<String>()
+    val errorMessage: LiveData<String> = _errorMessage
+
     fun loadAccounts() {
         accountsApi.getAccounts()
             .handleAccountResponse(
-                onSuccess = {  _accounts.value = it }
+                onSuccess = { _accounts.value = it },
+                onError = { _errorMessage.value = it }
             )
     }
 
-   fun addAccount(account: Account) {
-        accountsApi.addAccount(account).handleAccountResponse()
+    fun addAccount(account: Account) {
+        accountsApi.addAccount(account)
+            .handleAccountResponse(onError = { _errorMessage.value = it })
     }
 
     fun updateAccountFully(updatedAccount: Account) {
-        updatedAccount.id?.let{
-            accountsApi.updateAccountFully(it,updatedAccount).handleAccountResponse()
+        updatedAccount.id?.let {
+            accountsApi.updateAccountFully(it, updatedAccount)
+                .handleAccountResponse(onError = { _errorMessage.value = it })
         }
     }
 
     fun updateAccountPartially(id: String, isChecked: Boolean) {
         accountsApi
             .updateAccountPartially(id, AccountState(isChecked))
-            .handleAccountResponse()
+            .handleAccountResponse(onError = { _errorMessage.value = it })
     }
 
     fun deleteAccount(id: String) {
         accountsApi.deleteAccount(id)
-            .handleAccountResponse()
+            .handleAccountResponse(onError = { _errorMessage.value = it })
     }
 
-    private fun <T>Call<T>?.handleAccountResponse(
+    private fun <T> Call<T>?.handleAccountResponse(
         onSuccess: (T) -> Unit = { loadAccounts() },
         onError: (String) -> Unit = {}
     ) {
@@ -54,18 +62,13 @@ class AccountViewModel @Inject constructor(private val accountsApi: AccountsApi)
                 if (result != null && response.isSuccessful) {
                     onSuccess(result)
                 } else {
-                    onError(response.code().toString())
+                    onError("Ошибка: ${response.code()}")
                 }
             }
 
             override fun onFailure(call: Call<T>, t: Throwable) {
-                onError(t.message.toString())
+                onError("Ошибка сети: ${t.message}")
             }
-
-        }
-
-        )
+        })
     }
-
-
 }
