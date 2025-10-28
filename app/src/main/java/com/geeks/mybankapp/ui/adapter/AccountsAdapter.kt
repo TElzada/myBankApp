@@ -7,10 +7,7 @@ import com.geeks.mybankapp.data.model.Account
 import com.geeks.mybankapp.databinding.ItemAccountBinding
 
 class AccountsAdapter(
-    val onEdit: (Account) -> Unit,
-    val onSwitchToggle: (String, Boolean) -> Unit,
-    val onDelete: (String) -> Unit,
-    val onItemClick: (String) -> Unit
+    private val onItemClick: (String) -> Unit
 ) : RecyclerView.Adapter<AccountsAdapter.AccountViewHolder>() {
 
     private val items = arrayListOf<Account>()
@@ -42,14 +39,6 @@ class AccountsAdapter(
         fun bind(account: Account) = with(binding) {
             tvName.text = account.name
             tvBalance.text = "${account.balance} ${account.currency}"
-
-            btnEdit.setOnClickListener { onEdit(account) }
-            btnDelete.setOnClickListener { account.id?.let { onDelete(it) } }
-
-            switcher.isChecked = account.isActive == true
-            switcher.setOnCheckedChangeListener { _, isChecked ->
-                account.id?.let { onSwitchToggle(it, isChecked) }
-            }
 
             root.setOnClickListener {
                 account.id?.let { onItemClick(it) }

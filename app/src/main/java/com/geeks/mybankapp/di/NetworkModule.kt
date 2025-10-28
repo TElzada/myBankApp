@@ -1,5 +1,6 @@
 package com.geeks.mybankapp.di
 
+import com.geeks.mybankapp.data.network.AccountDetailsApi
 import com.geeks.mybankapp.data.network.AccountsApi
 import dagger.Module
 import dagger.Provides
@@ -30,4 +31,9 @@ object NetworkModule{
         .build()
     @Provides
     fun provideAccountsApi(retrofit: Retrofit): AccountsApi = retrofit.create(AccountsApi::class.java )
+
+    @Provides
+    fun provideAccountDetailsApi(retrofit: Retrofit): AccountDetailsApi = retrofit.create(
+        AccountDetailsApi::class.java)
+
 }

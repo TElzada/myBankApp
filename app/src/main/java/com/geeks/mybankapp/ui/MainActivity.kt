@@ -42,73 +42,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showAddDialog() {
-        val binding = DialogAddBinding.inflate(LayoutInflater.from(this))
-        with(binding) {
-            AlertDialog.Builder(this@MainActivity)
-                .setTitle("Добавление нового счёта")
-                .setView(binding.root)
-                .setPositiveButton("Добавить") { _, _ ->
-                    val account = Account(
-                        name = etName.text.toString(),
-                        balance = etBalance.text.toString().toIntOrNull() ?: 0,
-                        currency = etCurrency.text.toString()
-                    )
-                    viewModel.addAccount(account)
+        val dialogBinding = DialogAddBinding.inflate(LayoutInflater.from(this))
+        AlertDialog.Builder(this)
+            .setTitle("Добавление нового счёта")
+            .setView(dialogBinding.root)
+            .setPositiveButton("Добавить") { _, _ ->
+                val account = Account(
+                    name = dialogBinding.etName.text.toString(),
+                    balance = dialogBinding.etBalance.text.toString().toIntOrNull() ?: 0,
+                    currency = dialogBinding.etCurrency.text.toString()
+                )
+                viewModel.addAccount(account)
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun initAdapter() {
+        adapter = AccountsAdapter(
+            onItemClick = { id ->
+                id?.let {
+                    val intent = Intent(this@MainActivity, AccountDetailsActivity::class.java)
+                    intent.putExtra("account_id", it)
+                    startActivity(intent)
                 }
-                .show()
-        }
+            }
+        )
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        binding.recyclerView.adapter = adapter
     }
 
     override fun onResume() {
         super.onResume()
         viewModel.loadAccounts()
-    }
-
-    private fun initAdapter() = with(binding) {
-        adapter = AccountsAdapter(
-            onEdit = { showEditDialog(it) },
-            onSwitchToggle = { id, isChecked -> viewModel.updateAccountPartially(id, isChecked) },
-            onDelete = { showDeleteDialog(it) },
-            onItemClick = { id ->
-                val intent = Intent(this@MainActivity, AccountDetailsActivity::class.java)
-                intent.putExtra("account_id", id)
-                startActivity(intent)
-            }
-        )
-        recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
-        recyclerView.adapter = adapter
-    }
-
-    private fun showDeleteDialog(id: String) {
-        AlertDialog.Builder(this)
-            .setTitle("Вы уверены?")
-            .setMessage("Удалить счёт с идентификатором - $id?")
-            .setPositiveButton("Удалить") { _, _ -> viewModel.deleteAccount(id) }
-            .setNegativeButton("Отмена") { _, _ -> }
-            .show()
-    }
-
-    private fun showEditDialog(account: Account) {
-        val binding = DialogAddBinding.inflate(LayoutInflater.from(this))
-        with(binding) {
-            account.run {
-                etName.setText(name)
-                etBalance.setText(balance.toString())
-                etCurrency.setText(currency)
-
-                AlertDialog.Builder(this@MainActivity)
-                    .setTitle("Изменение счёта")
-                    .setView(binding.root)
-                    .setPositiveButton("Изменить") { _, _ ->
-                        val updatedAccount = account.copy(
-                            name = etName.text.toString(),
-                            balance = etBalance.text.toString().toIntOrNull() ?: 0,
-                            currency = etCurrency.text.toString()
-                        )
-                        viewModel.updateAccountFully(updatedAccount)
-                    }
-                    .show()
-            }
-        }
     }
 }
